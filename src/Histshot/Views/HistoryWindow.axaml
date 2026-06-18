@@ -1,0 +1,175 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:Histshot.Views"
+        xmlns:l="clr-namespace:Histshot.Localization"
+        x:Class="Histshot.Views.HistoryWindow"
+        Title="{l:Localize History_Title}"
+        Width="660"
+        Height="460"
+        MinWidth="520"
+        MinHeight="320"
+        RequestedThemeVariant="Dark"
+        Background="#181818"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+        <!-- Icon + text action buttons -->
+        <Style Selector="Button.historyButton">
+            <Setter Property="Background" Value="#2C2C2C" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="11,7" />
+            <Setter Property="Foreground" Value="#EDEDED" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.historyButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#3A3A3A" />
+        </Style>
+        <Style Selector="Button.historyButton:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#454545" />
+        </Style>
+
+        <!-- Destructive variant -->
+        <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#B23A36" />
+        </Style>
+        <Style Selector="Button.danger:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#C84540" />
+        </Style>
+
+        <!-- Item card -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#232323" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#333333" />
+        </Style>
+        <Style Selector="Border.card:pointerover">
+            <Setter Property="Background" Value="#2A2A2A" />
+        </Style>
+
+        <!-- Clickable thumbnail -->
+        <Style Selector="Border.thumb">
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#3C3C3C" />
+            <Setter Property="Background" Value="#0A0A0A" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style Selector="Border.thumb:pointerover">
+            <Setter Property="BorderBrush" Value="#4D9DE0" />
+        </Style>
+
+        <!-- Neutralize the default ListBox selection chrome -->
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*" Margin="20,18">
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+            <TextBlock Grid.Column="0"
+                       Text="{l:Localize ScreenshotHistory}"
+                       FontSize="22"
+                       FontWeight="SemiBold"
+                       Foreground="#FFFFFF"
+                       VerticalAlignment="Center" />
+            <Button Grid.Column="1"
+                    x:Name="ClearAllButton"
+                    Classes="historyButton danger"
+                    Click="ClearAllButton_Click"
+                    ToolTip.Tip="{l:Localize Tip_RemoveAllScreenshots}">
+                <StackPanel Orientation="Horizontal" Spacing="7">
+                    <Path Data="M216 48h-40v-8a24 24 0 0 0-24-24h-48a24 24 0 0 0-24 24v8H40a8 8 0 0 0 0 16h8v144a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16V64h8a8 8 0 0 0 0-16M96 40a8 8 0 0 1 8-8h48a8 8 0 0 1 8 8v8H96Zm96 168H64V64h128Zm-80-104v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0m48 0v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0"
+                          Fill="#EDEDED"
+                          Stretch="Uniform"
+                          Width="15"
+                          Height="15"
+                          VerticalAlignment="Center" />
+                    <TextBlock Text="{l:Localize ClearHistory}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- Items -->
+        <ListBox Grid.Row="1"
+                 x:Name="HistoryListBox"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Padding="0"
+                 SelectionMode="Single">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="views:HistoryItemViewModel">
+                    <Border Classes="card">
+                        <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                            <!-- Clickable preview -->
+                            <Border Grid.Column="0"
+                                    Classes="thumb"
+                                    Width="116"
+                                    Height="72"
+                                    PointerPressed="Thumbnail_PointerPressed"
+                                    ToolTip.Tip="{l:Localize Tip_PreviewOrEdit}">
+                                <Image Source="{Binding Thumbnail}" Stretch="Uniform" />
+                            </Border>
+
+                            <!-- Meta -->
+                            <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center" Spacing="2">
+                                <TextBlock Text="{Binding DateText}"
+                                           FontSize="15"
+                                           FontWeight="Medium"
+                                           Foreground="#F2F2F2" />
+                                <TextBlock Text="{Binding TimeText}"
+                                           FontSize="13"
+                                           Foreground="#9A9A9A" />
+                            </StackPanel>
+
+                            <!-- Actions -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <Button Classes="historyButton"
+                                        Tag="{Binding}"
+                                        Click="CopyButton_Click"
+                                        ToolTip.Tip="{l:Localize Tip_CopyToClipboard}">
+                                    <StackPanel Orientation="Horizontal" Spacing="7">
+                                        <Path Data="M216 32H88a8 8 0 0 0-8 8v40H40a8 8 0 0 0-8 8v128a8 8 0 0 0 8 8h128a8 8 0 0 0 8-8v-40h40a8 8 0 0 0 8-8V40a8 8 0 0 0-8-8m-56 176H48V96h112Zm48-48h-32V88a8 8 0 0 0-8-8H96V48h112Z"
+                                              Fill="#EDEDED"
+                                              Stretch="Uniform"
+                                              Width="15"
+                                              Height="15"
+                                              VerticalAlignment="Center" />
+                                        <TextBlock Text="{l:Localize Copy}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Classes="historyButton danger"
+                                        Tag="{Binding}"
+                                        Click="DeleteButton_Click"
+                                        ToolTip.Tip="{l:Localize Tip_DeleteScreenshot}">
+                                    <StackPanel Orientation="Horizontal" Spacing="7">
+                                        <Path Data="M216 48h-40v-8a24 24 0 0 0-24-24h-48a24 24 0 0 0-24 24v8H40a8 8 0 0 0 0 16h8v144a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16V64h8a8 8 0 0 0 0-16M96 40a8 8 0 0 1 8-8h48a8 8 0 0 1 8 8v8H96Zm96 168H64V64h128Zm-80-104v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0m48 0v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0"
+                                              Fill="#EDEDED"
+                                              Stretch="Uniform"
+                                              Width="15"
+                                              Height="15"
+                                              VerticalAlignment="Center" />
+                                        <TextBlock Text="{l:Localize Delete}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</Window>

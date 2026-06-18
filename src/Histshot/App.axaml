@@ -1,0 +1,17 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Histshot.App"
+             RequestedThemeVariant="Default">
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+
+    <TrayIcon.Icons>
+        <TrayIcons>
+            <TrayIcon Icon="/Assets/app-dark.ico"
+                      ToolTipText="Histshot"
+                      Clicked="TrayIcon_Clicked" />
+        </TrayIcons>
+    </TrayIcon.Icons>
+</Application>
