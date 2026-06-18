@@ -2,9 +2,12 @@ name: Release
 
 # Push a version tag to build and publish a release:
 #   git tag v1.2.3 && git push origin v1.2.3
-# The job derives the version from the tag, publishes a self-contained Windows build, then uses
-# Velopack to produce the update package + Histshot-win-Setup.exe and uploads both to the GitHub
-# release. The in-app updater reads from this same Releases page.
+#
+# Builds Histshot for both Windows architectures (x64 and arm64) and publishes them to a single
+# GitHub release. Each architecture is its own Velopack channel (win-x64 / win-arm64) with its own
+# Setup.exe and its own update chain, so an x64 user only ever updates to x64 builds and an arm64
+# user only to arm64 builds. The in-app updater reads the channel recorded at install time, so no
+# code change is needed to keep the two chains separate.
 on:
   push:
     tags:
@@ -16,6 +19,18 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    strategy:
+      # Serialize the two architectures: both jobs publish into the SAME release via --merge, and
+      # running them concurrently would race on reading/writing that release's assets. The first job
+      # creates the release; the second merges its assets in.
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            channel: win-x64
+          - rid: win-arm64
+            channel: win-arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,7 +51,7 @@ jobs:
         # to match the tag so the updater compares correctly against the release.
         run: >
           dotnet publish src/Histshot/Histshot.csproj
-          -c Release -r win-x64 --self-contained true
+          -c Release -r ${{ matrix.rid }} --self-contained true
           -p:Version=${{ steps.version.outputs.version }}
           -o publish
 
@@ -44,8 +59,13 @@ jobs:
         run: dotnet tool install -g vpk
 
       - name: Download previous releases (for delta packages)
-        # Lets vpk build small delta updates against prior releases. Harmless on the first release.
-        run: vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }}
+        # Pulls prior packages of THIS channel so vpk can build small delta updates. Harmless when
+        # the channel has no previous release yet.
+        run: >
+          vpk download github
+          --repoUrl https://github.com/${{ github.repository }}
+          --token ${{ secrets.GITHUB_TOKEN }}
+          --channel ${{ matrix.channel }}
 
       - name: Pack
         run: >
@@ -56,8 +76,11 @@ jobs:
           --mainExe Histshot.exe
           --packTitle Histshot
           --icon src/Histshot/Assets/app-dark.ico
+          --runtime ${{ matrix.rid }}
+          --channel ${{ matrix.channel }}
 
       - name: Upload to GitHub Releases
+        # --merge lets the second architecture add its assets to the release created by the first.
         run: >
           vpk upload github
           --repoUrl https://github.com/${{ github.repository }}
@@ -66,4 +89,5 @@ jobs:
           --releaseName "Histshot ${{ steps.version.outputs.version }}"
           --tag ${{ github.ref_name }}
           --outputDir Releases
+          --channel ${{ matrix.channel }}
           --merge
