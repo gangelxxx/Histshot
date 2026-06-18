@@ -1,0 +1,143 @@
+name: Release
+
+# Automatic release on commit. Push to main with "[release]" anywhere in the commit message and CI
+# builds and publishes a release; ordinary commits are ignored. The version comes from <Version> in
+# src/Histshot/Histshot.csproj, so bump it in the same commit you mark [release].
+#
+# Builds Histshot for both Windows architectures (x64 and arm64) into a single GitHub release. Each
+# architecture is its own Velopack channel (win-x64 / win-arm64) with its own Setup.exe and update
+# chain, so an x64 user only ever updates to x64 builds and an arm64 user only to arm64 builds. The
+# in-app updater reads the channel recorded at install time, so no code change keeps the two chains
+# separate.
+on:
+  push:
+    branches:
+      - main
+
+# Only one release run at a time. Two pushes landing close together would otherwise both pass the
+# gate (neither sees the other's not-yet-created release) and the loser fails packing with "a
+# release in this channel is equal or greater to the current version".
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # required to create the git tag, the release, and upload assets
+
+jobs:
+  # Decides whether a release should happen and what version it is. Runs fast; the heavy build job
+  # below only starts if this says go.
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.decide.outputs.release }}
+      version: ${{ steps.decide.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Decide whether to release
+        id: decide
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Gate 1: the head commit message must contain "[release]".
+          msg="$(git log -1 --pretty=%B)"
+          if ! grep -qF '[release]' <<<"$msg"; then
+            echo "No [release] marker in commit message — skipping."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Read <Version> from the csproj.
+          version="$(grep -oE '<Version>[^<]+' src/Histshot/Histshot.csproj | sed 's/<Version>//')"
+          if [ -z "$version" ]; then
+            echo "::error::Could not read <Version> from src/Histshot/Histshot.csproj"
+            exit 1
+          fi
+          echo "Requested release version: $version"
+
+          # Gate 2: refuse to re-release a version that already has a release/tag. Velopack would
+          # otherwise fail or duplicate. Bump <Version> to cut a new release.
+          if gh release view "v$version" >/dev/null 2>&1; then
+            echo "::error::Release v$version already exists. Bump <Version> in Histshot.csproj."
+            exit 1
+          fi
+
+          echo "release=true" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: gate
+    if: needs.gate.outputs.release == 'true'
+    runs-on: windows-latest
+    strategy:
+      # Serialize the two architectures: both publish into the SAME release via --merge, and running
+      # them concurrently would race on reading/writing that release's assets. The first job creates
+      # the release (and tag); the second merges its assets in.
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            channel: win-x64
+          - rid: win-arm64
+            channel: win-arm64
+    env:
+      VERSION: ${{ needs.gate.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish
+        # Self-contained so end users don't need the .NET runtime installed. The version is forced
+        # to match the release so the updater compares correctly.
+        run: >
+          dotnet publish src/Histshot/Histshot.csproj
+          -c Release -r ${{ matrix.rid }} --self-contained true
+          -p:Version=$env:VERSION
+          -o publish
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk
+
+      - name: Download previous releases (for delta packages)
+        # Pulls prior packages of THIS channel so vpk can build small delta updates. Harmless when
+        # the channel has no previous release yet.
+        run: >
+          vpk download github
+          --repoUrl https://github.com/${{ github.repository }}
+          --token ${{ secrets.GITHUB_TOKEN }}
+          --channel ${{ matrix.channel }}
+
+      - name: Pack
+        run: >
+          vpk pack
+          --packId Histshot
+          --packVersion $env:VERSION
+          --packDir publish
+          --mainExe Histshot.exe
+          --packTitle Histshot
+          --icon src/Histshot/Assets/app-dark.ico
+          --runtime ${{ matrix.rid }}
+          --channel ${{ matrix.channel }}
+
+      - name: Upload to GitHub Releases
+        # vpk creates the release and the git tag (pointed at this commit via --targetCommitish).
+        # --merge lets the second architecture add its assets to the release the first one created.
+        run: >
+          vpk upload github
+          --repoUrl https://github.com/${{ github.repository }}
+          --token ${{ secrets.GITHUB_TOKEN }}
+          --publish
+          --releaseName "Histshot $env:VERSION"
+          --tag v$env:VERSION
+          --targetCommitish ${{ github.sha }}
+          --outputDir Releases
+          --channel ${{ matrix.channel }}
+          --merge

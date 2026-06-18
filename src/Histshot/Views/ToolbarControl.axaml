@@ -1,0 +1,286 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="clr-namespace:Histshot.Localization"
+             xmlns:views="using:Histshot.Views"
+             x:Class="Histshot.Views.ToolbarControl"
+             Background="Transparent"
+             ClipToBounds="False">
+    <UserControl.Styles>
+        <Style Selector="Button.toolButton">
+            <Setter Property="Width" Value="26" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Padding" Value="3,1" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.toolButton:pointerover">
+            <Setter Property="Background" Value="#33FFFFFF" />
+        </Style>
+        <Style Selector="Button.toolButton:pressed">
+            <Setter Property="Background" Value="#40FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.closeButton">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="#FF4444" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.closeButton:pointerover">
+            <Setter Property="Background" Value="#FF6666" />
+        </Style>
+        <Style Selector="Button.closeButton:pressed">
+            <Setter Property="Background" Value="#CC2222" />
+        </Style>
+
+        <Style Selector="Slider.toolSlider">
+            <Setter Property="Width" Value="80" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <!-- Keep the slider (and its inner parts) from taking focus, otherwise
+             pressing it blurs the active text box and commits the text before the
+             new size is applied. -->
+        <Style Selector="Slider.toolSlider /template/ RepeatButton">
+            <Setter Property="Focusable" Value="False" />
+        </Style>
+        <Style Selector="Slider.toolSlider /template/ Thumb">
+            <Setter Property="Focusable" Value="False" />
+        </Style>
+
+        <!-- Strip the Fluent focus chrome from the comment box's inner border
+             (the theme styles target the template's PART_BorderElement, so local
+             property values on the TextBox itself cannot override them). -->
+        <Style Selector="TextBox.commentBox /template/ Border#PART_BorderElement">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="TextBox.commentBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="TextBox.commentBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ClipToBounds="False" RowDefinitions="Auto,Auto">
+        <Grid Grid.Row="0" ClipToBounds="False">
+        <Border x:Name="ToolbarBorder"
+                Background="#F2121212"
+                Padding="6,1"
+                CornerRadius="13"
+                BorderBrush="#30FFFFFF"
+                BorderThickness="1"
+                BoxShadow="0 3 12 0 #80000000"
+                PointerPressed="ToolbarBorder_PointerPressed">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="12,0,16,0">
+                <!-- Tools -->
+                <Button x:Name="PencilButton"
+                        Classes="toolButton"
+                        Click="ToolButton_Click"
+                        Tag="Pencil"
+                        ToolTip.Tip="{l:Localize Tool_Pencil}">
+                    <Path Data="m227.31 73.37l-44.68-44.69a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h44.69a15.86 15.86 0 0 0 11.31-4.69L227.31 96a16 16 0 0 0 0-22.63M92.69 208H48v-44.69l88-88L180.69 120ZM192 108.68L147.31 64l24-24L216 84.68Z"
+                          Fill="White"
+                          Stretch="Uniform"
+                          Width="16"
+                          Height="16" />
+                </Button>
+                <Button x:Name="LineButton"
+                        Classes="toolButton"
+                        Click="ToolButton_Click"
+                        Tag="Line"
+                        ToolTip.Tip="{l:Localize Tool_Line}">
+                    <Path Data="M214.64 41.36a32 32 0 0 0-50.2 38.89l-84.19 84.19a32.06 32.06 0 0 0-38.89 4.94a32 32 0 1 0 50.2 6.37l84.19-84.19a32 32 0 0 0 38.89-50.2m-139.33 162a16 16 0 0 1-22.64-22.64a16 16 0 0 1 22.63 0a16 16 0 0 1 .01 22.61Zm128-128a16 16 0 1 1 0-22.63a16 16 0 0 1 .02 22.57Z"
+                          Fill="White"
+                          Stretch="Uniform"
+                          Width="16"
+                          Height="16" />
+                </Button>
+                <Button x:Name="ArrowButton"
+                        Classes="toolButton"
+                        Click="ToolButton_Click"
+                        Tag="Arrow"
+                        ToolTip.Tip="{l:Localize Tool_Arrow}">
+                    <Path Data="M200 64v104a8 8 0 0 1-16 0V83.31L69.66 197.66a8 8 0 0 1-11.32-11.32L172.69 72H88a8 8 0 0 1 0-16h104a8 8 0 0 1 8 8"
+                          Fill="White"
+                          Stretch="Uniform"
+                          Width="16"
+                          Height="16" />
+                </Button>
+                <Button x:Name="RectangleButton"
+                        Classes="toolButton"
+                        Click="ToolButton_Click"
+                        Tag="Rectangle"
+                        ToolTip.Tip="{l:Localize Tool_Rectangle}">
+                    <Path Data="M208 32H48a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16m0 176H48V48h160Z"
+                          Fill="White"
+                          Stretch="Uniform"
+                          Width="16"
+                          Height="16" />
+                </Button>
+                <Button x:Name="SelectionButton"
+                        Classes="toolButton"
+                        Click="ToolButton_Click"
+                        Tag="Selection"
+                        ToolTip.Tip="{l:Localize Tool_Select}">
+                    <Path Data="M168 132.69L214.08 115l.33-.13a16 16 0 0 0-1.41-29.8L52.92 32.8A15.95 15.95 0 0 0 32.8 52.92L85.07 213a15.82 15.82 0 0 0 14.41 11h.78a15.84 15.84 0 0 0 14.61-9.59l.13-.33L132.69 168L184 219.31a16 16 0 0 0 22.63 0l12.68-12.68a16 16 0 0 0 0-22.63ZM195.31 208L144 156.69a16 16 0 0 0-26 4.93c0 .11-.09.22-.13.32l-17.65 46L48 48l159.85 52.2l-45.95 17.64l-.32.13a16 16 0 0 0-4.93 26L208 195.31Z"
+                          Fill="White"
+                          Stretch="Uniform"
+                          Width="16"
+                          Height="16" />
+                </Button>
+                <Button x:Name="TextButton"
+                        Classes="toolButton"
+                        Click="ToolButton_Click"
+                        Tag="Text"
+                        ToolTip.Tip="{l:Localize Tool_Text}">
+                    <Path Data="M208 56v32a8 8 0 0 1-16 0V64h-56v128h24a8 8 0 0 1 0 16H96a8 8 0 0 1 0-16h24V64H64v24a8 8 0 0 1-16 0V56a8 8 0 0 1 8-8h144a8 8 0 0 1 8 8"
+                          Fill="White"
+                          Stretch="Uniform"
+                          Width="16"
+                          Height="16" />
+                </Button>
+
+                <Rectangle Width="1" Height="18" Fill="#30FFFFFF" Margin="1,0" />
+
+                <!-- Color -->
+                <Border x:Name="ColorPreview"
+                        Width="18"
+                        Height="18"
+                        Background="Red"
+                        BorderBrush="White"
+                        BorderThickness="1.5"
+                        CornerRadius="9"
+                        VerticalAlignment="Center"
+                        Margin="0"
+                        PointerPressed="ColorPreview_PointerPressed"
+                        ToolTip.Tip="{l:Localize Tool_Color}" />
+
+                <!-- Thickness -->
+                <Slider x:Name="ThicknessSlider"
+                        Classes="toolSlider"
+                        Focusable="False"
+                        IsTabStop="False"
+                        Minimum="1"
+                        Maximum="20"
+                        Value="3"
+                        ValueChanged="ThicknessSlider_ValueChanged"
+                        ToolTip.Tip="{l:Localize Tool_Thickness}" />
+
+                <Slider x:Name="FontSizeSlider"
+                        Classes="toolSlider"
+                        Focusable="False"
+                        IsTabStop="False"
+                        Minimum="8"
+                        Maximum="72"
+                        Value="18"
+                        ValueChanged="FontSizeSlider_ValueChanged"
+                        IsVisible="False"
+                        ToolTip.Tip="{l:Localize Tool_FontSize}" />
+
+                <Rectangle Width="1" Height="18" Fill="#30FFFFFF" Margin="1,0" />
+
+                <!-- Actions -->
+                <Button x:Name="CommentButton"
+                        Classes="toolButton"
+                        Click="CommentButton_Click"
+                        ToolTip.Tip="{l:Localize Tip_CommentScreenshot}">
+                    <Path Data="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"
+                          Fill="White"
+                          Stretch="Uniform"
+                          Width="16"
+                          Height="16" />
+                </Button>
+                <Button x:Name="CopyButton"
+                        Classes="toolButton"
+                        Click="CopyButton_Click"
+                        ToolTip.Tip="{l:Localize Copy}">
+                    <Path Data="M216 32H88a8 8 0 0 0-8 8v40H40a8 8 0 0 0-8 8v128a8 8 0 0 0 8 8h128a8 8 0 0 0 8-8v-40h40a8 8 0 0 0 8-8V40a8 8 0 0 0-8-8m-56 176H48V96h112Zm48-48h-32V88a8 8 0 0 0-8-8H96V48h112Z"
+                          Fill="White"
+                          Stretch="Uniform"
+                          Width="16"
+                          Height="16" />
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- Close button: small red circle with a white cross in the top-right corner.
+             Centered on the panel corner: half inside, half outside. -->
+        <Button x:Name="CloseButton"
+                Classes="closeButton"
+                Click="CloseButton_Click"
+                IsVisible="False"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,-2,-3,0"
+                ToolTip.Tip="{l:Localize Cancel}">
+            <Path Data="M205.66 194.34a8 8 0 0 1-11.32 11.32L128 139.31l-66.34 66.35a8 8 0 0 1-11.32-11.32L116.69 128L50.34 61.66a8 8 0 0 1 11.32-11.32L128 116.69l66.34-66.35a8 8 0 0 1 11.32 11.32L139.31 128Z"
+                  Fill="White"
+                  Stretch="Uniform"
+                  Width="8"
+                  Height="8" />
+        </Button>
+        </Grid>
+
+        <!-- Comment input: shown below the toolbar by the comment button. -->
+        <Border Grid.Row="1"
+                x:Name="CommentPanel"
+                IsVisible="False"
+                Margin="0,6,0,0"
+                Background="#F21E1E1E"
+                CornerRadius="10"
+                BorderBrush="#30FFFFFF"
+                BorderThickness="1"
+                BoxShadow="0 3 12 0 #80000000"
+                Padding="10,5">
+            <Grid ColumnDefinitions="*,Auto">
+                <views:CommentTextBox Grid.Column="0"
+                                      x:Name="CommentTextBox"
+                                      Classes="commentBox"
+                                      PlaceholderText="{l:Localize CommentWatermark}"
+                                      PlaceholderForeground="#7F7F7F"
+                                      Background="Transparent"
+                                      BorderThickness="0"
+                                      FocusAdorner="{x:Null}"
+                                      Foreground="White"
+                                      CaretBrush="White"
+                                      FontSize="12"
+                                      MinHeight="0"
+                                      Padding="0,1"
+                                      VerticalContentAlignment="Center"
+                                      TextWrapping="Wrap"
+                                      AcceptsReturn="True"
+                                      TextChanged="CommentTextBox_TextChanged" />
+                <!-- Bell appears only once comment text is entered. -->
+                <Button Grid.Column="1"
+                        x:Name="ReminderButton"
+                        Classes="toolButton"
+                        IsVisible="False"
+                        Click="ReminderButton_Click"
+                        Margin="6,0,0,0"
+                        VerticalAlignment="Center"
+                        ToolTip.Tip="{l:Localize Tip_Reminder}">
+                    <Path x:Name="ReminderIcon"
+                          Data="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
+                          Fill="White"
+                          Stretch="Uniform"
+                          Width="14"
+                          Height="14" />
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

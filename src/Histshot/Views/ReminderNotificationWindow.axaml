@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:Histshot.Localization"
+        x:Class="Histshot.Views.ReminderNotificationWindow"
+        Title="{l:Localize Notification_Title}"
+        Width="340"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="True"
+        WindowDecorations="None"
+        RequestedThemeVariant="Dark"
+        Background="#232323">
+
+    <Border BorderBrush="#3C3C3C"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="14,12"
+            PointerPressed="Root_PointerPressed"
+            Cursor="Hand">
+        <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,10,0">
+                <TextBlock Text="{l:Localize Notification_Title}"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="#FFFFFF" />
+                <TextBlock x:Name="CommentText"
+                           FontSize="12"
+                           Foreground="#B9B9B9"
+                           TextWrapping="Wrap"
+                           MaxHeight="60"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="TimeText"
+                           FontSize="11"
+                           Foreground="#7F7F7F" />
+            </StackPanel>
+            <Button Grid.Column="1"
+                    VerticalAlignment="Top"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="4"
+                    Click="CloseButton_Click"
+                    ToolTip.Tip="{l:Localize Cancel}">
+                <Path Data="M205.66 194.34a8 8 0 0 1-11.32 11.32L128 139.31l-66.34 66.35a8 8 0 0 1-11.32-11.32L116.69 128L50.34 61.66a8 8 0 0 1 11.32-11.32L128 116.69l66.34-66.35a8 8 0 0 1 11.32 11.32L139.31 128Z"
+                      Fill="#9A9A9A"
+                      Stretch="Uniform"
+                      Width="9"
+                      Height="9" />
+            </Button>
+        </Grid>
+    </Border>
+</Window>

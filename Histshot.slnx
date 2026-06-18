@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Histshot.Core/Histshot.Core.csproj" />
+    <Project Path="src/Histshot/Histshot.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Histshot.Core.Tests/Histshot.Core.Tests.csproj" />
+  </Folder>
+</Solution>

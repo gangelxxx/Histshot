@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Histshot.Views.EditorControl"
+             Background="Transparent"
+             HorizontalAlignment="Left">
+    <UserControl.Styles>
+        <!-- The Fluent theme re-sets the TextBox's inner border background on
+             :pointerover/:focus from theme resources, which would paint an opaque
+             fill over the screenshot. Keep the input transparent and borderless in
+             every state; the dashed edit outline is drawn separately on the canvas. -->
+        <Style Selector="TextBox.annotation /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="TextBox.annotation:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="TextBox.annotation:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+    </UserControl.Styles>
+    <Canvas x:Name="DrawingCanvas"
+            Background="Transparent"
+            HorizontalAlignment="Left"
+            PointerPressed="Canvas_PointerPressed"
+            PointerMoved="Canvas_PointerMoved"
+            PointerReleased="Canvas_PointerReleased">
+        <Image x:Name="CapturedImage" Stretch="Fill" />
+    </Canvas>
+</UserControl>

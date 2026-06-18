@@ -1,0 +1,89 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icons="using:Optris.Icons.Avalonia"
+        xmlns:l="clr-namespace:Histshot.Localization"
+        x:Class="Histshot.Views.ImagePreviewWindow"
+        Title="{l:Localize Preview_Title}"
+        Width="900"
+        Height="650"
+        MinWidth="320"
+        MinHeight="240"
+        RequestedThemeVariant="Dark"
+        Background="#101010"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <!-- Round carousel arrows on the edges -->
+        <Style Selector="Button.navButton">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Height" Value="46" />
+            <Setter Property="CornerRadius" Value="23" />
+            <Setter Property="Background" Value="#99000000" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.navButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#D0000000" />
+        </Style>
+        <Style Selector="Button.navButton:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#E6000000" />
+        </Style>
+
+        <!-- Copy button (top-right) -->
+        <Style Selector="Button.overlayButton">
+            <Setter Property="Width" Value="42" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="CornerRadius" Value="21" />
+            <Setter Property="Background" Value="#99000000" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.overlayButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#D0000000" />
+        </Style>
+        <Style Selector="Button.overlayButton:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#E6000000" />
+        </Style>
+    </Window.Styles>
+
+    <Grid>
+        <Image x:Name="PreviewImage" Stretch="Uniform" Margin="8" />
+
+        <!-- Previous -->
+        <Button x:Name="PrevButton"
+                Classes="navButton"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Margin="14,0"
+                Click="Prev_Click"
+                ToolTip.Tip="{l:Localize Tip_Previous}">
+            <icons:Icon Value="mdi-chevron-left" FontSize="26" Foreground="White" />
+        </Button>
+
+        <!-- Next -->
+        <Button x:Name="NextButton"
+                Classes="navButton"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Margin="14,0"
+                Click="Next_Click"
+                ToolTip.Tip="{l:Localize Tip_Next}">
+            <icons:Icon Value="mdi-chevron-right" FontSize="26" Foreground="White" />
+        </Button>
+
+        <!-- Copy to clipboard -->
+        <Button x:Name="CopyButton"
+                Classes="overlayButton"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="14"
+                Click="Copy_Click"
+                ToolTip.Tip="{l:Localize Tip_CopyToClipboard}">
+            <icons:Icon Value="mdi-content-copy" FontSize="20" Foreground="White" />
+        </Button>
+    </Grid>
+</Window>
