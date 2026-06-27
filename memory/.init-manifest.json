@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "data_dir": "memory",
+  "root_gitignore": {
+    "modified": true,
+    "existed": true,
+    "original": "# Build results\n[Dd]ebug/\n[Dd]ebugPublic/\n[Rr]elease/\n[Rr]eleases/\nx64/\nx86/\n[Ww][Ii][Nn]32/\n[Aa][Rr][Mm]/\n[Aa][Rr][Mm]64/\nbld/\n[Bb]in/\n[Oo]bj/\n[Ll]og/\n[Ll]ogs/\n\n# Visual Studio\n.vs/\n*.user\n*.userosscache\n*.suo\n*.cache\n*.ilk\n*.pdb\n\n# Rider\n.idea/\n\n# Publish\npublish/\n\n.gitignore\n\ndocs\nscripts\ntests\npublish-ci\n"
+  },
+  "created_agents_md": false,
+  "created_cm_guide": true,
+  "docs": [
+    {
+      "orig_path": "docs/description.md",
+      "import_copy": "description.md",
+      "deleted": true
+    },
+    {
+      "orig_path": "docs/implementation-plan.md",
+      "import_copy": "implementation-plan.md",
+      "deleted": true
+    },
+    {
+      "orig_path": "docs/multi-monitor-dpi-issue.md",
+      "import_copy": "multi-monitor-dpi-issue.md",
+      "deleted": true
+    }
+  ]
+}

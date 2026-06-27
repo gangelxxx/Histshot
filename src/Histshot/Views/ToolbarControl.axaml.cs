@@ -29,9 +29,9 @@ public partial class ToolbarControl : UserControl
         PointerPressed += (_, e) => e.Handled = true;
     }
 
-    public void ShowCancelButton()
+    public void ShowCloseButton()
     {
-        CancelButton.IsVisible = true;
+        CloseButton.IsVisible = true;
     }
 
     private void ToolbarBorder_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -92,7 +92,7 @@ public partial class ToolbarControl : UserControl
         CopyRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    private void CancelButton_Click(object? sender, RoutedEventArgs e)
+    private void CloseButton_Click(object? sender, RoutedEventArgs e)
     {
         CancelRequested?.Invoke(this, EventArgs.Empty);
     }

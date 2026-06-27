@@ -14,6 +14,13 @@ on:
     branches:
       - main
 
+# Only one release run at a time. Two pushes landing close together would otherwise both pass the
+# gate (neither sees the other's not-yet-created release) and the loser fails packing with "a
+# release in this channel is equal or greater to the current version".
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 permissions:
   contents: write # required to create the git tag, the release, and upload assets
 
