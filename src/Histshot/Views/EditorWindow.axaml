@@ -7,7 +7,7 @@
         Topmost="True"
         CanResize="False"
         WindowStartupLocation="Manual">
-    <Canvas x:Name="RootCanvas">
+    <Canvas x:Name="RootCanvas" ClipToBounds="False">
         <views:EditorControl x:Name="Editor" />
         <views:ToolbarControl x:Name="Toolbar"
                               Canvas.Left="0"

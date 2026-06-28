@@ -65,7 +65,7 @@ public partial class CaptureOverlayWindow : Window
         _capturedImage = capturedImage;
         InitializeComponent();
 
-        var canvas = new Canvas();
+        var canvas = new Canvas { ClipToBounds = false };
         Content = canvas;
 
         _backgroundImage = new Image
@@ -468,7 +468,7 @@ public partial class CaptureOverlayWindow : Window
                 _editorControl.TranslateOperations(offset.Value);
             PositionEditorControl();
             _editorControl.IsVisible = true;
-            _toolbarControl?.ShowCancelButton();
+            _toolbarControl?.ShowCloseButton();
             if (_toolbarControl != null)
                 _toolbarControl.IsVisible = true;
             PositionToolbar();
