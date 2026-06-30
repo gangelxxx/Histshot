@@ -124,7 +124,29 @@ public partial class App : Application
         _updateService.UpdateReady += (_, _) => Dispatcher.UIThread.Post(EnableUpdateMenuItem);
         _ = _updateService.CheckAndDownloadAsync();
 
+        // Once startup JIT and the initial update check settle, hand the now-unused
+        // pages back to the OS so the idle tray footprint reflects live memory rather
+        // than the peak reached during launch.
+        ScheduleTrim(TimeSpan.FromSeconds(8));
+
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// Trims the working set once, <paramref name="delay"/> after now. Used when the app
+    /// returns to its idle tray state (a window closed, or startup just finished) — the
+    /// delay lets the window tear down and its bitmaps become collectable first.
+    /// </summary>
+    private static void ScheduleTrim(TimeSpan delay)
+    {
+        var timer = new DispatcherTimer { Interval = delay };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            if (OperatingSystem.IsWindows())
+                MemoryTrimmer.Trim();
+        };
+        timer.Start();
     }
 
     private static void ConfigureServices(IServiceCollection services)
@@ -192,6 +214,7 @@ public partial class App : Application
             ShowInTaskbar = true,
             Icon = ThemedWindowIcon
         };
+        historyWindow.Closed += (_, _) => ScheduleTrim(TimeSpan.FromSeconds(2));
         historyWindow.Show();
     }
 
@@ -203,6 +226,7 @@ public partial class App : Application
             return;
         }
         _settingsWindow = new SettingsWindow { ShowInTaskbar = true, Icon = ThemedWindowIcon };
+        _settingsWindow.Closed += (_, _) => ScheduleTrim(TimeSpan.FromSeconds(2));
         _settingsWindow.Show();
     }
 
@@ -252,6 +276,10 @@ public partial class App : Application
                 {
                     try { o.Close(); } catch { }
                 }
+                // Closing the overlays disposes the full-screen capture bitmaps (the app's
+                // heaviest transient state). Trim once the tray goes idle so that memory is
+                // handed back to the OS rather than lingering as working set.
+                ScheduleTrim(TimeSpan.FromSeconds(2));
             };
 
             for (int i = 0; i < screens.Count; i++)
@@ -260,20 +288,9 @@ public partial class App : Application
                 var bounds = new PixelRect(screen.X, screen.Y, screen.Width, screen.Height);
                 var capturedImage = await captureService.CaptureScreenAsync(screen);
 
-                var overlay = new CaptureOverlayWindow(captureService, bounds, screen.Scaling, closeAll, capturedImage)
-                {
-                    OnCaptured = result =>
-                    {
-                        closeAll();
-
-                        var editor = new EditorWindow(result.Image, result.X, result.Y, result.Width, result.Height, result.Scaling)
-                        {
-                            ShowInTaskbar = true,
-                            Icon = ThemedWindowIcon
-                        };
-                        editor.Show();
-                    }
-                };
+                // Editing happens inline inside the overlay; capture finishes by closing all
+                // overlays via closeAll (which also trims memory). No separate editor window.
+                var overlay = new CaptureOverlayWindow(captureService, bounds, screen.Scaling, closeAll, capturedImage);
                 // Starting a selection on this overlay clears any selection on the others, so only
                 // one selection exists across all monitors.
                 overlay.SelectionStarted = () =>

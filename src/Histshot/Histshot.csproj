@@ -8,8 +8,20 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- App version. The release CI overrides this from the pushed git tag (vX.Y.Z);
          the in-app updater compares it against the latest GitHub release. -->
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
+
+    <!-- Tray app: idle most of its life, so favour a small, promptly-returned working
+         set over GC throughput. Workstation + non-concurrent GC avoids the background-GC
+         heap reservation; the ConserveMemory option below makes the GC release segments
+         back to the OS more eagerly. Working-set eviction is done by MemoryTrimmer. -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 0–9; higher = give memory back to the OS sooner at some throughput cost. -->
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="9" />
+  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Models\" />
