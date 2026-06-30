@@ -1,4 +1,5 @@
 using System.Text;
+using Histshot.Core.Models;
 using SkiaSharp;
 
 namespace Histshot.Core.Drawing;
@@ -33,6 +34,12 @@ public static class DrawingRenderer
         if (stroke.Points.Count < 2)
             return;
 
+        if (stroke.Tool == ToolType.Rectangle)
+        {
+            RenderRectangle(canvas, stroke);
+            return;
+        }
+
         using var paint = new SKPaint
         {
             Color = stroke.Color,
@@ -56,6 +63,28 @@ public static class DrawingRenderer
         {
             DrawArrowHead(canvas, stroke.Points[^2], stroke.Points[^1], stroke.Color, stroke.Thickness);
         }
+    }
+
+    private static void RenderRectangle(SKCanvas canvas, StrokeOperation stroke)
+    {
+        var a = stroke.Points[0];
+        var b = stroke.Points[^1];
+
+        using var paint = new SKPaint
+        {
+            Color = stroke.Color,
+            StrokeWidth = stroke.Thickness,
+            IsAntialias = true,
+            Style = SKPaintStyle.Stroke,
+            StrokeJoin = SKStrokeJoin.Miter
+        };
+
+        var rect = new SKRect(
+            MathF.Min(a.X, b.X),
+            MathF.Min(a.Y, b.Y),
+            MathF.Max(a.X, b.X),
+            MathF.Max(a.Y, b.Y));
+        canvas.DrawRect(rect, paint);
     }
 
     private static void DrawArrowHead(SKCanvas canvas, SKPoint from, SKPoint to, SKColor color, float thickness)

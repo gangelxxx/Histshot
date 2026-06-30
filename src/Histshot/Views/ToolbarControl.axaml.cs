@@ -58,11 +58,31 @@ public partial class ToolbarControl : UserControl
         PencilButton.Background = _settings.Tool == ToolType.Pencil ? ActiveToolBrush : Brushes.Transparent;
         LineButton.Background = _settings.Tool == ToolType.Line ? ActiveToolBrush : Brushes.Transparent;
         ArrowButton.Background = _settings.Tool == ToolType.Arrow ? ActiveToolBrush : Brushes.Transparent;
+        RectangleButton.Background = _settings.Tool == ToolType.Rectangle ? ActiveToolBrush : Brushes.Transparent;
         SelectionButton.Background = _settings.Tool == ToolType.Selection ? ActiveToolBrush : Brushes.Transparent;
         TextButton.Background = _settings.Tool == ToolType.Text ? ActiveToolBrush : Brushes.Transparent;
 
-        FontSizeSlider.IsVisible = _settings.Tool == ToolType.Text;
-        ThicknessSlider.IsVisible = _settings.Tool != ToolType.Text;
+        UpdateSliderVisibility();
+    }
+
+    // The font-size slider is shown whenever the Text tool is active OR a text
+    // annotation is currently being edited (e.g. opened with the pointer tool), so
+    // its size can always be adjusted; otherwise the thickness slider is shown.
+    private bool _textEditingActive;
+
+    public void SetTextEditing(bool active, float fontSize = 0f)
+    {
+        _textEditingActive = active;
+        if (active)
+            FontSizeSlider.Value = Math.Clamp(fontSize, FontSizeSlider.Minimum, FontSizeSlider.Maximum);
+        UpdateSliderVisibility();
+    }
+
+    private void UpdateSliderVisibility()
+    {
+        bool textMode = _settings.Tool == ToolType.Text || _textEditingActive;
+        FontSizeSlider.IsVisible = textMode;
+        ThicknessSlider.IsVisible = !textMode;
     }
 
     private void ColorPreview_PointerPressed(object? sender, PointerPressedEventArgs e)

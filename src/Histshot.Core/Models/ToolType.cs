@@ -6,5 +6,6 @@ public enum ToolType
     Text,
     Arrow,
     Line,
+    Rectangle,
     Selection
 }
