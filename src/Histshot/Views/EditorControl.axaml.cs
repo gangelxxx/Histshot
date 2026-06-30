@@ -76,6 +76,12 @@ public partial class EditorControl : UserControl
     public event EventHandler? CloseRequested;
     public event EventHandler? EditCanceled;
 
+    // Raised when a text annotation starts/stops being edited, so the toolbar can show
+    // the font-size slider regardless of which tool is active. The float is the font
+    // size of the text being edited.
+    public event EventHandler<float>? TextEditingStarted;
+    public event EventHandler? TextEditingEnded;
+
     public EditorControl()
     {
         InitializeComponent();
@@ -545,9 +551,14 @@ public partial class EditorControl : UserControl
                 // changed straight from the toolbar without first switching to the
                 // Selection tool. For an arrow the line control stands in for the
                 // whole operation (both line and head map to the same stroke).
-                var drawnControl = (Control?)_currentPencilPath ?? (Control?)_currentLine ?? _currentRect;
-                if (drawnControl != null)
-                    SelectShape(drawnControl);
+                // Pencil is excluded: the bounding box around a freehand scribble is
+                // more noise than help, so a finished stroke stays unselected.
+                if (_currentStroke.Tool != ToolType.Pencil)
+                {
+                    var drawnControl = (Control?)_currentLine ?? _currentRect;
+                    if (drawnControl != null)
+                        SelectShape(drawnControl);
+                }
             }
             else
             {
@@ -630,6 +641,8 @@ public partial class EditorControl : UserControl
         };
 
         AddTextHandles();
+
+        TextEditingStarted?.Invoke(this, (float)_activeTextBox.FontSize);
     }
 
     private void AddTextHandles()
@@ -833,6 +846,8 @@ public partial class EditorControl : UserControl
 
         RemoveTextHandles();
         DrawingCanvas.Children.Remove(textBox);
+
+        TextEditingEnded?.Invoke(this, EventArgs.Empty);
 
         if (string.IsNullOrWhiteSpace(text) || !startPoint.HasValue)
         {

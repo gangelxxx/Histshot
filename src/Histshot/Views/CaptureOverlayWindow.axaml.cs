@@ -107,6 +107,8 @@ public partial class CaptureOverlayWindow : Window
         _editorControl = new EditorControl();
         _editorControl.CloseRequested += OnEditorCloseRequested;
         _editorControl.EditCanceled += OnEditorEditCanceled;
+        _editorControl.TextEditingStarted += (_, fontSize) => _toolbarControl?.SetTextEditing(true, fontSize);
+        _editorControl.TextEditingEnded += (_, _) => _toolbarControl?.SetTextEditing(false);
         _editorControl.IsVisible = false;
         canvas.Children.Add(_editorControl);
 
