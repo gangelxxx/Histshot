@@ -29,6 +29,7 @@ public partial class EditorControl : UserControl
     private Path? _currentPencilPath;
     private Line? _currentLine;
     private Path? _currentArrowHead;
+    private Rectangle? _currentRect;
     private TextBox? _activeTextBox;
     private Point? _textStartPoint;
     private TextOperation? _editingOperation;
@@ -102,6 +103,7 @@ public partial class EditorControl : UserControl
         _currentPencilPath = null;
         _currentLine = null;
         _currentArrowHead = null;
+        _currentRect = null;
         if (_activeTextBox != null)
         {
             DrawingCanvas.Children.Remove(_activeTextBox);
@@ -213,6 +215,11 @@ public partial class EditorControl : UserControl
                 {
                     line.Stroke = brush;
                     line.StrokeThickness = stroke.Thickness;
+                }
+                else if (control is Rectangle rect)
+                {
+                    rect.Stroke = brush;
+                    rect.StrokeThickness = stroke.Thickness;
                 }
             }
             else if (operation is TextOperation text && control is TextBlock block)
@@ -358,6 +365,11 @@ public partial class EditorControl : UserControl
                     DrawingCanvas.Children.Add(_currentLine);
                     DrawingCanvas.Children.Add(_currentArrowHead);
                     break;
+                case ToolType.Rectangle:
+                    _currentStroke.Points.Add(ToSkPoint(point));
+                    _currentRect = CreateRectangleShape(_currentStroke);
+                    DrawingCanvas.Children.Add(_currentRect);
+                    break;
             }
         }
 
@@ -397,6 +409,11 @@ public partial class EditorControl : UserControl
                     UpdateArrowControls(shapeStroke);
                     UpdateSelectionHandles();
                     break;
+                case ToolType.Rectangle:
+                    if (_selectedControl is Rectangle rect)
+                        PositionRectangle(rect, shapeStroke);
+                    UpdateSelectionHandles();
+                    break;
             }
 
             e.Handled = true;
@@ -434,6 +451,10 @@ public partial class EditorControl : UserControl
             {
                 UpdateArrowControls(stroke);
             }
+            else if (stroke.Tool == ToolType.Rectangle && _selectedControl is Rectangle rect)
+            {
+                PositionRectangle(rect, stroke);
+            }
 
             UpdateSelectionHandles();
         }
@@ -465,6 +486,15 @@ public partial class EditorControl : UserControl
                             _currentStroke.Points[0], _currentStroke.Points[^1],
                             _currentStroke.Color, _currentStroke.Thickness);
                     }
+                    break;
+                case ToolType.Rectangle:
+                    if (_currentStroke.Points.Count > 1)
+                        _currentStroke.Points[^1] = skPoint;
+                    else
+                        _currentStroke.Points.Add(skPoint);
+
+                    if (_currentRect != null)
+                        PositionRectangle(_currentRect, _currentStroke);
                     break;
             }
         }
@@ -505,12 +535,17 @@ public partial class EditorControl : UserControl
                     _shapeControls.Add(_currentArrowHead);
                     _shapeMap[_currentArrowHead] = _currentStroke;
                 }
+                if (_currentRect != null)
+                {
+                    _shapeControls.Add(_currentRect);
+                    _shapeMap[_currentRect] = _currentStroke;
+                }
 
                 // Select the shape we just drew so its color/thickness can be
                 // changed straight from the toolbar without first switching to the
                 // Selection tool. For an arrow the line control stands in for the
                 // whole operation (both line and head map to the same stroke).
-                var drawnControl = (Control?)_currentPencilPath ?? _currentLine;
+                var drawnControl = (Control?)_currentPencilPath ?? (Control?)_currentLine ?? _currentRect;
                 if (drawnControl != null)
                     SelectShape(drawnControl);
             }
@@ -523,6 +558,8 @@ public partial class EditorControl : UserControl
                     DrawingCanvas.Children.Remove(_currentLine);
                 if (_currentArrowHead != null)
                     DrawingCanvas.Children.Remove(_currentArrowHead);
+                if (_currentRect != null)
+                    DrawingCanvas.Children.Remove(_currentRect);
             }
         }
 
@@ -530,6 +567,7 @@ public partial class EditorControl : UserControl
         _currentPencilPath = null;
         _currentLine = null;
         _currentArrowHead = null;
+        _currentRect = null;
 
         e.Handled = true;
     }
@@ -900,6 +938,12 @@ public partial class EditorControl : UserControl
                 DrawingCanvas.Children.Add(arrowLine);
                 DrawingCanvas.Children.Add(arrowHead);
                 break;
+            case StrokeOperation stroke when stroke.Tool == ToolType.Rectangle:
+                var rectangle = CreateRectangleShape(stroke);
+                _shapeControls.Add(rectangle);
+                _shapeMap[rectangle] = operation;
+                DrawingCanvas.Children.Add(rectangle);
+                break;
             case TextOperation text:
                 var textBlock = CreateTextBlock(text);
                 _shapeControls.Add(textBlock);
@@ -973,6 +1017,32 @@ public partial class EditorControl : UserControl
         return (line, head);
     }
 
+    private static Rectangle CreateRectangleShape(StrokeOperation stroke)
+    {
+        var rect = new Rectangle
+        {
+            Stroke = new SolidColorBrush(ToAvaloniaColor(stroke.Color)),
+            StrokeThickness = stroke.Thickness,
+            // Outline only; a null fill keeps the interior click-through so shapes
+            // behind the rectangle stay selectable.
+            Fill = null
+        };
+        PositionRectangle(rect, stroke);
+        return rect;
+    }
+
+    // Place/resize the canvas rectangle from the two opposite corner points so it
+    // works no matter which direction the user dragged.
+    private static void PositionRectangle(Rectangle rect, StrokeOperation stroke)
+    {
+        var a = stroke.Points[0];
+        var b = stroke.Points[^1];
+        Canvas.SetLeft(rect, Math.Min(a.X, b.X));
+        Canvas.SetTop(rect, Math.Min(a.Y, b.Y));
+        rect.Width = Math.Abs(a.X - b.X);
+        rect.Height = Math.Abs(a.Y - b.Y);
+    }
+
     private static Geometry CreateArrowHeadGeometry(SKPoint from, SKPoint to, SKColor color, float thickness)
     {
         const float arrowLength = 20f;
@@ -1043,7 +1113,7 @@ public partial class EditorControl : UserControl
 
             if (_shapeMap.TryGetValue(control, out var operation) && operation is StrokeOperation stroke)
             {
-                var distance = DistanceToPolyline(point, stroke.Points);
+                var distance = StrokeHitDistance(point, stroke);
                 DebugLogger.Log($"  control {control.GetType().Name} stroke distance={distance}");
                 if (distance <= threshold)
                 {
@@ -1063,6 +1133,31 @@ public partial class EditorControl : UserControl
             }
         }
         return null;
+    }
+
+    // Distance from a point to a stroke for hit testing. A rectangle is stored as two
+    // opposite corners, so its "polyline" would be the diagonal — measure against the
+    // four perimeter edges instead.
+    private static double StrokeHitDistance(Point point, StrokeOperation stroke)
+    {
+        if (stroke.Tool == ToolType.Rectangle && stroke.Points.Count >= 2)
+            return DistanceToRectanglePerimeter(point, stroke.Points[0], stroke.Points[^1]);
+        return DistanceToPolyline(point, stroke.Points);
+    }
+
+    private static double DistanceToRectanglePerimeter(Point p, SKPoint a, SKPoint b)
+    {
+        var x1 = Math.Min(a.X, b.X);
+        var y1 = Math.Min(a.Y, b.Y);
+        var x2 = Math.Max(a.X, b.X);
+        var y2 = Math.Max(a.Y, b.Y);
+        var tl = new SKPoint(x1, y1);
+        var tr = new SKPoint(x2, y1);
+        var br = new SKPoint(x2, y2);
+        var bl = new SKPoint(x1, y2);
+        return Math.Min(
+            Math.Min(DistanceToSegment(p, tl, tr), DistanceToSegment(p, tr, br)),
+            Math.Min(DistanceToSegment(p, br, bl), DistanceToSegment(p, bl, tl)));
     }
 
     private static double DistanceToPolyline(Point point, IList<SKPoint> points)
@@ -1124,7 +1219,7 @@ public partial class EditorControl : UserControl
             {
                 ShowPathSelection(stroke);
             }
-            else if (stroke.Tool == ToolType.Line || stroke.Tool == ToolType.Arrow)
+            else if (stroke.Tool == ToolType.Line || stroke.Tool == ToolType.Arrow || stroke.Tool == ToolType.Rectangle)
             {
                 ShowLineHandles(stroke);
             }
@@ -1194,7 +1289,7 @@ public partial class EditorControl : UserControl
             return GetStrokeBounds(stroke).Inflate(4).Contains(point);
 
         const double threshold = 10;
-        return DistanceToPolyline(point, stroke.Points) <= threshold;
+        return StrokeHitDistance(point, stroke) <= threshold;
     }
 
     // Pick the cursor that reflects what a press at this point would do, so the user
@@ -1240,7 +1335,7 @@ public partial class EditorControl : UserControl
             {
                 if (operation is StrokeOperation stroke)
                 {
-                    if (DistanceToPolyline(point, stroke.Points) <= threshold)
+                    if (StrokeHitDistance(point, stroke) <= threshold)
                         return true;
                 }
                 else if (control.Bounds.Inflate(threshold).Contains(point))
@@ -1331,6 +1426,10 @@ public partial class EditorControl : UserControl
         if (stroke.Tool == ToolType.Arrow)
         {
             UpdateArrowControls(stroke);
+        }
+        else if (stroke.Tool == ToolType.Rectangle && _selectedControl is Rectangle rect)
+        {
+            PositionRectangle(rect, stroke);
         }
         else if (_selectedControl is Line line)
         {

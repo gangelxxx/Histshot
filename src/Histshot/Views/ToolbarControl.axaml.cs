@@ -58,6 +58,7 @@ public partial class ToolbarControl : UserControl
         PencilButton.Background = _settings.Tool == ToolType.Pencil ? ActiveToolBrush : Brushes.Transparent;
         LineButton.Background = _settings.Tool == ToolType.Line ? ActiveToolBrush : Brushes.Transparent;
         ArrowButton.Background = _settings.Tool == ToolType.Arrow ? ActiveToolBrush : Brushes.Transparent;
+        RectangleButton.Background = _settings.Tool == ToolType.Rectangle ? ActiveToolBrush : Brushes.Transparent;
         SelectionButton.Background = _settings.Tool == ToolType.Selection ? ActiveToolBrush : Brushes.Transparent;
         TextButton.Background = _settings.Tool == ToolType.Text ? ActiveToolBrush : Brushes.Transparent;
 
