@@ -41,6 +41,12 @@ sealed class Program
 
         return AppBuilder.Configure<App>()
             .UsePlatformDetect()
+            // Software rendering: this tray tool shows a window only briefly during a capture, so a
+            // GPU compositor isn't worth its cost — keeping it would hold a GPU context and tick a
+            // render loop continuously (~0.7% GPU) even while idle in the tray. CPU rendering drops
+            // idle GPU to zero and trims GPU-side memory; the only trade-off is slightly less smooth
+            // full-screen overlay interaction on very high-DPI screens.
+            .With(new Win32PlatformOptions { RenderingMode = new[] { Win32RenderingMode.Software } })
 #if DEBUG
             .WithDeveloperTools()
 #endif
